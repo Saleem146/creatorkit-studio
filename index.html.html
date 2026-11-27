@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CreatorKit Studio — SEO Article, PDF, Voice & Image Tools</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .article-preview h1 { font-size: 1.75rem; font-weight: 800; margin-bottom: 0.75rem; line-height: 1.25; }
+    .article-preview h2 { font-size: 1.35rem; font-weight: 700; margin-top: 1.25rem; margin-bottom: 0.5rem; line-height: 1.35; }
+    .article-preview h3 { font-size: 1.125rem; font-weight: 700; margin-top: 1rem; margin-bottom: 0.4rem; line-height: 1.4; }
+    .article-preview p { margin-bottom: 0.75rem; line-height: 1.7; }
+    .checkerboard {
+      background-image:
+        linear-gradient(45deg, #e2e8f0 25%, transparent 25%),
+        linear-gradient(-45deg, #e2e8f0 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #e2e8f0 75%),
+        linear-gradient(-45deg, transparent 75%, #e2e8f0 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
+  <header class="border-b border-slate-800 bg-slate-900/90 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white">CreatorKit Studio</h1>
+        <p class="text-xs sm:text-sm text-slate-400">SEO Article Formatter, Text to PDF, Text to Speech &amp; Image HD Studio</p>
+      </div>
+      <nav class="flex flex-wrap gap-2" id="mainTabs">
+        <button data-tab="formatter" class="tab-btn px-3.5 py-2 rounded-lg text-sm font-semibold bg-indigo-600 text-white">1. Article Formatter</button>
+        <button data-tab="pdf" class="tab-btn px-3.5 py-2 rounded-lg text-sm font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700">2. Text to PDF</button>
+        <button data-tab="tts" class="tab-btn px-3.5 py-2 rounded-lg text-sm font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700">3. Text to Speech &amp; Audio</button>
+        <button data-tab="image" class="tab-btn px-3.5 py-2 rounded-lg text-sm font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700">4. Image Resizer &amp; HD</button>
+      </nav>
+    </div>
+  </header>
+
+  <div id="toast" class="fixed bottom-5 right-5 z-50 hidden bg-emerald-600 text-white px-4 py-2.5 rounded-lg shadow-lg text-sm font-medium"></div>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6 space-y-6">
+    <!-- TAB 1: ARTICLE FORMATTER -->
+    <section id="tab-formatter" class="tab-panel space-y-6">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+          <div class="text-xs text-slate-400">Word Count</div>
+          <div id="statWords" class="text-2xl font-bold text-white mt-1">0</div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+          <div class="text-xs text-slate-400">Reading Time (200 WPM)</div>
+          <div id="statReadTime" class="text-2xl font-bold text-indigo-400 mt-1">0 min</div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+          <div class="text-xs text-slate-400">Headings Detected</div>
+          <div id="statHeadings" class="text-2xl font-bold text-emerald-400 mt-1">0</div>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+          <div class="text-xs text-slate-400">Characters</div>
+          <div id="statChars" class="text-2xl font-bold text-amber-400 mt-1">0</div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <label for="articleInput" class="text-sm font-semibold text-white">Paste or Upload Article Text</label>
+            <div class="flex gap-2">
+              <label class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium cursor-pointer">
+                Upload .TXT/.MD
+                <input id="articleFileInput" type="file" accept=".txt,.md,text/plain" class="hidden" />
+              </label>
+              <button id="loadSampleBtn" type="button" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium">Sample Article</button>
+              <button id="clearArticleBtn" type="button" class="px-3 py-1.5 rounded-lg bg-rose-950 hover:bg-rose-900 text-rose-200 text-xs font-medium">Clear</button>
+            </div>
+          </div>
+          <textarea id="articleInput" rows="15" placeholder="Paste your article here. The first line becomes H1, short title lines become bold H2/H3 headings, and body text becomes clean paragraphs..." class="w-full rounded-lg bg-slate-950 border border-slate-700 p-3.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500"></textarea>
+
+          <div class="flex flex-wrap gap-2 pt-1">
+            <button id="autoFormatBtn" type="button" class="px-3.5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white">Auto-Format Headings</button>
+            <button id="tagH1Btn" type="button" class="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold">Prefix H1 (# )</button>
+            <button id="tagH2Btn" type="button" class="px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold">Prefix H2 (## )</button>
+            <button id="tagH3Btn" type="button" class="px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold">Prefix H3 (### )</button>
+            <button id="downloadTxtBtn" type="button" class="px-3.5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-xs font-semibold text-white">Download Text (.txt)</button>
+            <button id="copyHtmlBtn" type="button" class="px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-indigo-300">Copy Clean HTML</button>
+          </div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-semibold text-white">Structured Article Preview</h2>
+            <span class="text-xs text-slate-400">Auto H1 / H2 / H3 &amp; Bold Headings</span>
+          </div>
+          <div id="articlePreview" class="article-preview flex-1 bg-white text-slate-900 rounded-lg p-5 overflow-y-auto max-h-[430px] border border-slate-300"></div>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-2">
+        <h3 class="text-base font-bold text-white">How to Use the SEO Article Formatter</h3>
+        <p class="text-sm text-slate-300 leading-relaxed">
+          Paste any raw article or upload a <code class="text-indigo-300">.txt</code> / <code class="text-indigo-300">.md</code> file to inspect live word count, estimated reading time at 200 words per minute, character count, and heading structure. You can also use <code class="text-indigo-300">#</code>, <code class="text-indigo-300">##</code>, and <code class="text-indigo-300">###</code> prefixes or the quick prefix buttons to control heading hierarchy, export the text as a <code class="text-indigo-300">.txt</code> file, or copy clean semantic HTML for blogs and CMS editors.
+        </p>
+      </div>
+    </section>
+
+    <!-- TAB 2: TEXT TO PDF -->
+    <section id="tab-pdf" class="tab-panel hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-base font-bold text-white">Text to PDF Generator</h2>
+            <button id="syncFromFormatterBtn" type="button" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium">Import From Formatter</button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label for="pdfTitle" class="block text-xs text-slate-400 mb-1">Document Title</label>
+              <input id="pdfTitle" type="text" value="SEO Article Export" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-white" />
+            </div>
+            <div>
+              <label for="pdfFontSize" class="block text-xs text-slate-400 mb-1">Body Font Size (pt)</label>
+              <select id="pdfFontSize" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-white">
+                <option value="10">10 pt (Compact)</option>
+                <option value="12" selected>12 pt (Standard)</option>
+                <option value="14">14 pt (Large)</option>
+              </select>
+            </div>
+            <div>
+              <label for="pdfMargin" class="block text-xs text-slate-400 mb-1">Page Margin (mm)</label>
+              <select id="pdfMargin" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-white">
+                <option value="12">12 mm</option>
+                <option value="18" selected>18 mm</option>
+                <option value="25">25 mm</option>
+              </select>
+            </div>
+          </div>
+
+          <label class="inline-flex items-center gap-2 text-xs text-slate-300">
+            <input id="pdfIncludeHeader" type="checkbox" checked class="rounded border-slate-600" />
+            Include document title header at top of PDF
+          </label>
+
+          <textarea id="pdfTextInput" rows="12" placeholder="Enter or paste the text you want to export as a PDF document..." class="w-full rounded-lg bg-slate-950 border border-slate-700 p-3.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500"></textarea>
+
+          <button id="downloadPdfBtn" type="button" class="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold text-white">Download PDF (.pdf)</button>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-sm font-semibold text-white">Live PDF Page Preview</h2>
+            <span class="text-xs text-slate-400">A4 Layout Preview</span>
+          </div>
+          <div id="pdfPreviewBox" class="flex-1 bg-white text-slate-900 rounded-lg p-6 border border-slate-300 overflow-y-auto max-h-[450px]">
+            <h3 id="pdfPreviewTitle" class="text-xl font-bold mb-3 border-b pb-2">SEO Article Export</h3>
+            <div id="pdfPreviewBody" class="whitespace-pre-wrap text-sm leading-relaxed text-slate-800"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-2">
+        <h3 class="text-base font-bold text-white">How to Convert Text to PDF</h3>
+        <p class="text-sm text-slate-300 leading-relaxed">
+          Type or import your article text, set a document title, choose a comfortable font size and page margin, preview how the text looks on the page, and click <code class="text-indigo-300">Download PDF (.pdf)</code> to generate a multi-page PDF locally in your browser.
+        </p>
+      </div>
+    </section>
+
+    <!-- TAB 3: TEXT TO SPEECH & AUDIO -->
+    <section id="tab-tts" class="tab-panel hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-base font-bold text-white">Browser Text-to-Speech Reader</h2>
+            <button id="syncTtsFromFormatterBtn" type="button" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium">Import From Formatter</button>
+          </div>
+
+          <textarea id="ttsTextInput" rows="8" placeholder="Paste text to listen out loud using your browser's SpeechSynthesis voices..." class="w-full rounded-lg bg-slate-950 border border-slate-700 p-3.5 text-sm text-slate-100 focus:outline-none focus:border-indigo-500"></textarea>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label for="ttsVoiceSelect" class="block text-xs text-slate-400 mb-1">Voice</label>
+              <select id="ttsVoiceSelect" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-white"></select>
+            </div>
+            <div>
+              <label for="ttsRate" class="block text-xs text-slate-400 mb-1">Speed: <span id="ttsRateVal">1.0x</span></label>
+              <input id="ttsRate" type="range" min="0.5" max="1.8" step="0.1" value="1" class="w-full" />
+            </div>
+            <div>
+              <label for="ttsPitch" class="block text-xs text-slate-400 mb-1">Pitch: <span id="ttsPitchVal">1.0</span></label>
+              <input id="ttsPitch" type="range" min="0.5" max="1.6" step="0.1" value="1" class="w-full" />
+            </div>
+          </div>
+
+          <div class="flex flex-wrap gap-2">
+            <button id="ttsPlayBtn" type="button" class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-xs font-semibold text-white">Play / Resume</button>
+            <button id="ttsPauseBtn" type="button" class="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-xs font-semibold text-white">Pause</button>
+            <button id="ttsStopBtn" type="button" class="px-4 py-2 rounded-lg bg-rose-700 hover:bg-rose-600 text-xs font-semibold text-white">Stop</button>
+            <button id="copyTtsTextBtn" type="button" class="px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold">Copy Text for TTS</button>
+            <button id="downloadScriptBtn" type="button" class="px-3.5 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold">Download Script (.txt)</button>
+          </div>
+
+          <div class="rounded-lg bg-amber-950/50 border border-amber-800/70 p-3 text-xs text-amber-200 leading-relaxed">
+            <strong>Browser Audio Export Note:</strong> Standard browser <code class="text-amber-100">SpeechSynthesis</code> speaks text aloud live in your browser, but client-side web pages cannot directly capture or export system TTS voices as a downloadable audio file without an external TTS API or server. Use the Microphone Voice Recorder on the right to record and download a real audio file.
+          </div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+          <h2 class="text-base font-bold text-white">Microphone Voice Recorder (Downloadable Audio)</h2>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            Read your script into your microphone to record a real audio file in your browser, preview it immediately, and download it.
+          </p>
+
+          <div class="flex items-center justify-between bg-slate-950 border border-slate-800 rounded-lg px-4 py-3">
+            <div class="flex items-center gap-2.5">
+              <span id="recDot" class="w-3 h-3 rounded-full bg-slate-600"></span>
+              <span id="recStatus" class="text-sm font-medium text-slate-300">Ready to record</span>
+            </div>
+            <span id="recTimer" class="font-mono text-sm text-indigo-400">00:00</span>
+          </div>
+
+          <div class="flex flex-wrap gap-2">
+            <button id="startRecBtn" type="button" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white">Start Recording</button>
+            <button id="stopRecBtn" type="button" disabled class="px-4 py-2 rounded-lg bg-rose-700 disabled:opacity-40 text-xs font-semibold text-white">Stop Recording</button>
+            <a id="downloadRecLink" class="hidden px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-xs font-semibold text-white">Download Recorded Audio</a>
+          </div>
+
+          <audio id="recAudioPreview" controls class="w-full hidden mt-2"></audio>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-2">
+        <h3 class="text-base font-bold text-white">How Text-to-Speech &amp; Voice Recording Work</h3>
+        <p class="text-sm text-slate-300 leading-relaxed">
+          Use the Text-to-Speech panel to audition how your article sounds at different speeds and pitches using installed browser voices, or copy/download the clean script. If you need a downloadable voiceover file, use the Microphone Recorder to capture spoken narration directly in the browser.
+        </p>
+      </div>
+    </section>
+
+    <!-- TAB 4: IMAGE RESIZER & HD ENHANCER -->
+    <section id="tab-image" class="tab-panel hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+          <div>
+            <label class="block text-sm font-semibold text-white mb-2">1. Upload Image</label>
+            <input id="imageFileInput" type="file" accept="image/*" class="block w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-semibold text-white mb-2">2. Social Media &amp; Format Presets</label>
+            <div class="flex flex-wrap gap-1.5 mb-2.5" id="presetCategoryTabs">
+              <button type="button" data-cat="youtube" class="preset-cat px-2.5 py-1 rounded bg-indigo-600 text-white text-xs font-semibold">YouTube</button>
+              <button type="button" data-cat="facebook" class="preset-cat px-2.5 py-1 rounded bg-slate-800 text-slate-300 text-xs font-semibold">Facebook</button>
+              <button type="button" data-cat="instagram" class="preset-cat px-2.5 py-1 rounded bg-slate-800 text-slate-300 text-xs font-semibold">Instagram</button>
+              <button type="button" data-cat="tiktok" class="preset-cat px-2.5 py-1 rounded bg-slate-800 text-slate-300 text-xs font-semibold">TikTok</button>
+              <button type="button" data-cat="brand" class="preset-cat px-2.5 py-1 rounded bg-slate-800 text-slate-300 text-xs font-semibold">Logo &amp; Web</button>
+            </div>
+            <div id="presetButtonsGrid" class="grid grid-cols-2 gap-1.5 max-h-40 overflow-y-auto pr-1"></div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="imgWidth" class="block text-xs text-slate-400 mb-1">Width (px)</label>
+              <input id="imgWidth" type="number" min="16" max="4096" value="1280" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-1.5 text-sm text-white" />
+            </div>
+            <div>
+              <label for="imgHeight" class="block text-xs text-slate-400 mb-1">Height (px)</label>
+              <input id="imgHeight" type="number" min="16" max="4096" value="720" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-1.5 text-sm text-white" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 items-center">
+            <div>
+              <label for="imgFitMode" class="block text-xs text-slate-400 mb-1">Fit Mode</label>
+              <select id="imgFitMode" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-1.5 text-sm text-white">
+                <option value="cover" selected>Cover (Fill &amp; Crop)</option>
+                <option value="contain">Contain (Fit Inside)</option>
+                <option value="stretch">Stretch (Exact W×H)</option>
+              </select>
+            </div>
+            <label class="inline-flex items-center gap-2 text-xs text-slate-300 pt-4">
+              <input id="lockAspectRatio" type="checkbox" class="rounded border-slate-600" />
+              Lock Aspect Ratio
+            </label>
+          </div>
+
+          <div class="border-t border-slate-800 pt-3 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-semibold text-white">3. HD Enhance &amp; Deblur</span>
+              <button id="quickHdBtn" type="button" class="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-xs font-semibold text-white">Quick HD Boost</button>
+            </div>
+
+            <div>
+              <label for="imgScaleMult" class="block text-xs text-slate-400 mb-1">Output Resolution Multiplier</label>
+              <select id="imgScaleMult" class="w-full rounded-lg bg-slate-950 border border-slate-700 px-3 py-1.5 text-sm text-white">
+                <option value="1" selected>1x (Exact Target Dimensions)</option>
+                <option value="1.5">1.5x Crisp Upscale</option>
+                <option value="2">2x HD Upscale</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="imgSharpen" class="block text-xs text-slate-400">Deblur / Sharpen: <span id="sharpenVal">20%</span></label>
+              <input id="imgSharpen" type="range" min="0" max="100" value="20" class="w-full" />
+            </div>
+            <div>
+              <label for="imgContrast" class="block text-xs text-slate-400">Contrast: <span id="contrastVal">108%</span></label>
+              <input id="imgContrast" type="range" min="50" max="160" value="108" class="w-full" />
+            </div>
+            <div>
+              <label for="imgBrightness" class="block text-xs text-slate-400">Brightness: <span id="brightnessVal">102%</span></label>
+              <input id="imgBrightness" type="range" min="50" max="160" value="102" class="w-full" />
+            </div>
+            <div>
+              <label for="imgSaturate" class="block text-xs text-slate-400">Color Vibrance: <span id="saturateVal">110%</span></label>
+              <input id="imgSaturate" type="range" min="0" max="200" value="110" class="w-full" />
+            </div>
+          </div>
+
+          <div class="border-t border-slate-800 pt-3 space-y-2.5">
+            <label class="block text-sm font-semibold text-white">4. Export Format &amp; Download</label>
+            <div class="grid grid-cols-2 gap-2">
+              <select id="imgFormat" class="rounded-lg bg-slate-950 border border-slate-700 px-3 py-2 text-sm text-white">
+                <option value="image/png" selected>PNG (.png)</option>
+                <option value="image/jpeg">JPG (.jpg)</option>
+                <option value="image/webp">WEBP (.webp)</option>
+              </select>
+              <button id="downloadImgBtn" type="button" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold text-white">Download Image</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h2 class="text-sm font-semibold text-white">Live Preview &amp; Before / After Comparison</h2>
+            <span id="imgDimensionsBadge" class="text-xs font-mono text-indigo-300 bg-indigo-950/70 px-2.5 py-1 rounded">1280 × 720 px</span>
+          </div>
+
+          <div>
+            <label for="compareSlider" class="block text-xs text-slate-400 mb-1">Before / After Split: <span id="compareVal">50%</span> (Left = Original, Right = Enhanced)</label>
+            <input id="compareSlider" type="range" min="0" max="100" value="50" class="w-full" />
+          </div>
+
+          <div class="relative flex-1 min-h-[360px] rounded-lg overflow-hidden checkerboard border border-slate-700 flex items-center justify-center p-2">
+            <div id="emptyCanvasPlaceholder" class="text-center text-slate-600 bg-white/90 px-4 py-3 rounded-lg text-sm font-medium">
+              Upload an image on the left to preview resizing, HD sharpening, and Before/After comparison.
+            </div>
+            <div id="canvasStage" class="relative hidden max-w-full max-h-[480px]">
+              <canvas id="afterCanvas" class="block max-w-full max-h-[480px] rounded"></canvas>
+              <canvas id="beforeCanvas" class="hidden"></canvas>
+              <div id="beforeOverlayWrap" class="absolute top-0 left-0 bottom-0 overflow-hidden pointer-events-none border-r-2 border-indigo-500" style="width: 50%;">
+                <canvas id="beforeDisplayCanvas" class="block max-w-none"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-2">
+        <h3 class="text-base font-bold text-white">How to Resize &amp; Enhance Images for Social Media</h3>
+        <p class="text-sm text-slate-300 leading-relaxed">
+          Pick any preset for YouTube, Facebook, Instagram, TikTok, or Logos/Web—or enter custom pixel dimensions with optional Aspect Ratio Lock. Adjust sharpening, contrast, brightness, and vibrance, drag the Before/After slider to inspect clarity improvements, and download in PNG, JPG, or WEBP format.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-t border-slate-800 bg-slate-900 mt-10">
+    <div class="max-w-7xl mx-auto px-4 py-5 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-400">
+      <div>CreatorKit Studio — Browser-based SEO &amp; Creator Utilities</div>
+      <div class="flex gap-4">
+        <button type="button" data-modal="privacy" class="modal-trigger hover:text-white underline">Privacy Policy</button>
+        <button type="button" data-modal="about" class="modal-trigger hover:text-white underline">About Us</button>
+        <button type="button" data-modal="contact" class="modal-trigger hover:text-white underline">Contact Us</button>
+      </div>
+    </div>
+  </footer>
+
+  <div id="infoModal" class="fixed inset-0 z-50 hidden bg-black/75 items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-xl max-w-lg w-full p-6 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 id="modalTitle" class="text-lg font-bold text-white"></h3>
+        <button id="closeModalBtn" type="button" class="text-slate-400 hover:text-white text-xl leading-none">&times;</button>
+      </div>
+      <div id="modalBody" class="text-sm text-slate-300 space-y-2.5 leading-relaxed"></div>
+    </div>
+  </div>
+
+  <script>
+    const toastEl = document.getElementById("toast");
+    function showToast(msg, isError = false) {
+      toastEl.textContent = msg;
+      toastEl.className = `fixed bottom-5 right-5 z-50 px-4 py-2.5 rounded-lg shadow-lg text-sm font-medium text-white ${isError ? "bg-rose-600" : "bg-emerald-600"}`;
+      setTimeout(() => { toastEl.classList.add("hidden"); }, 2600);
+    }
+
+    // Tabs
+    const tabBtns = document.querySelectorAll(".tab-btn");
+    const tabPanels = document.querySelectorAll(".tab-panel");
+    tabBtns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        const target = btn.dataset.tab;
+        tabBtns.forEach(b => {
+          b.className = "tab-btn px-3.5 py-2 rounded-lg text-sm font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700";
+        });
+        btn.className = "tab-btn px-3.5 py-2 rounded-lg text-sm font-semibold bg-indigo-600 text-white";
+        tabPanels.forEach(p => p.classList.toggle("hidden", p.id !== `tab-${target}`));
+      });
+    });
+
+    // Modals
+    const modal = document.getElementById("infoModal");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalBody = document.getElementById("modalBody");
+    const modalContent = {
+      privacy: {
+        title: "Privacy Policy",
+        body: "<p>CreatorKit Studio processes text formatting, PDF generation, speech synthesis, voice recording, and image resizing/enhancement directly inside your web browser whenever possible.</p><p>If you monetize this site with advertising networks (such as Google AdSense), third-party vendors may use cookies or similar technologies to serve ads based on prior visits.</p>"
+      },
+      about: {
+        title: "About Us",
+        body: "<p>CreatorKit Studio brings together practical daily utilities for bloggers, SEO specialists, and social media creators—including article structure formatting, PDF export, voice tools, and social media image presets.</p>"
+      },
+      contact: {
+        title: "Contact Us",
+        body: "<p>Have feedback, feature requests, or business inquiries? Reach out via email at <strong>support@example.com</strong> (replace this placeholder address with your own contact email before launching).</p>"
+      }
+    };
+    document.querySelectorAll(".modal-trigger").forEach(trig => {
+      trig.addEventListener("click", () => {
+        const data = modalContent[trig.dataset.modal];
+        modalTitle.textContent = data.title;
+        modalBody.innerHTML = data.body;
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+      });
+    });
+    document.getElementById("closeModalBtn").addEventListener("click", () => {
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    });
+    modal.addEventListener("click", e => {
+      if (e.target === modal) {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      }
+    });
+
+    // Tab 1: Article Formatter
+    const articleInput = document.getElementById("articleInput");
+    const articlePreview = document.getElementById("articlePreview");
+    const statWords = document.getElementById("statWords");
+    const statReadTime = document.getElementById("statReadTime");
+    const statHeadings = document.getElementById("statHeadings");
+    const statChars = document.getElementById("statChars");
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function parseArticleToHtml(rawText) {
+      const lines = rawText.split(/\r?\n/);
+      let headingsCount = 0;
+      let htmlParts = [];
+      let sawFirstContent = false;
+
+      lines.forEach(line => {
+        const trimmed = line.trim();
+        if (!trimmed) return;
+
+        if (trimmed.startsWith("### ")) {
+          headingsCount++;
+          htmlParts.push(`<h3><strong>${escapeHtml(trimmed.slice(4).trim())}</strong></h3>`);
+          sawFirstContent = true;
+        } else if (trimmed.startsWith("## ")) {
+          headingsCount++;
+          htmlParts.push(`<h2><strong>${escapeHtml(trimmed.slice(3).trim())}</strong></h2>`);
+          sawFirstContent = true;
+        } else if (trimmed.startsWith("# ")) {
+          headingsCount++;
+          htmlParts.push(`<h1><strong>${escapeHtml(trimmed.slice(2).trim())}</strong></h1>`);
+          sawFirstContent = true;
+        } else if (!sawFirstContent) {
+          headingsCount++;
+          htmlParts.push(`<h1><strong>${escapeHtml(trimmed)}</strong></h1>`);
+          sawFirstContent = true;
+        } else {
+          const wordsInLine = trimmed.split(/\s+/).length;
+          const looksLikeHeading = wordsInLine <= 8 && !/[.!?]$/.test(trimmed) && trimmed.length <= 75;
+          if (looksLikeHeading) {
+            headingsCount++;
+            htmlParts.push(`<h2><strong>${escapeHtml(trimmed)}</strong></h2>`);
+          } else {
+            htmlParts.push(`<p>${escapeHtml(trimmed)}</p>`);
+          }
+        }
+      });
+
+      return { html: htmlParts.join("\n") || "<p class='text-slate-400'>Your formatted article preview will appear here.</p>", headingsCount };
+    }
+
+    function updateArticleStatsAndPreview() {
+      const text = articleInput.value;
+      const trimmed = text.trim();
+      const words = trimmed ? trimmed.split(/\s+/).length : 0;
+      const mins = words === 0 ? 0 : Math.max(1, Math.ceil(words / 200));
+      const { html, headingsCount } = parseArticleToHtml(text);
+
+      statWords.textContent = words.toLocaleString();
+      statReadTime.textContent = `${mins} min`;
+      statHeadings.textContent = headingsCount.toString();
+      statChars.textContent = text.length.toLocaleString();
+      articlePreview.innerHTML = html;
+    }
+
+    articleInput.addEventListener("input", updateArticleStatsAndPreview);
+
+    document.getElementById("articleFileInput").addEventListener("change", e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        articleInput.value = ev.target.result || "";
+        updateArticleStatsAndPreview();
+        showToast("Article file loaded.");
+      };
+      reader.readAsText(file);
+    });
+
+    document.getElementById("loadSampleBtn").addEventListener("click", () => {
+      articleInput.value = `How to Structure SEO Articles That Rank\n\nWhy Clear Headings Matter\nSearch engines and human readers both scan headings to understand page hierarchy and topic relevance.\n\nStep-by-Step Optimization Checklist\nUse one clear H1 title, break sections with descriptive H2 and H3 subheadings, and keep paragraphs concise and readable.`;
+      updateArticleStatsAndPreview();
+    });
+
+    document.getElementById("clearArticleBtn").addEventListener("click", () => {
+      articleInput.value = "";
+      updateArticleStatsAndPreview();
+    });
+
+    function prefixSelectedOrLastLine(prefix) {
+      const start = articleInput.selectionStart;
+      const val = articleInput.value;
+      const lineStart = val.lastIndexOf("\n", start - 1) + 1;
+      const lineEndIdx = val.indexOf("\n", start);
+      const lineEnd = lineEndIdx === -1 ? val.length : lineEndIdx;
+      const currentLine = val.slice(lineStart, lineEnd).replace(/^#{1,3}\s+/, "");
+      articleInput.value = val.slice(0, lineStart) + prefix + currentLine + val.slice(lineEnd);
+      updateArticleStatsAndPreview();
+    }
+
+    document.getElementById("autoFormatBtn").addEventListener("click", () => {
+      updateArticleStatsAndPreview();
+      showToast("Article headings formatted.");
+    });
+    document.getElementById("tagH1Btn").addEventListener("click", () => prefixSelectedOrLastLine("# "));
+    document.getElementById("tagH2Btn").addEventListener("click", () => prefixSelectedOrLastLine("## "));
+    document.getElementById("tagH3Btn").addEventListener("click", () => prefixSelectedOrLastLine("### "));
+
+    document.getElementById("downloadTxtBtn").addEventListener("click", () => {
+      if (!articleInput.value.trim()) {
+        showToast("Please enter or paste article text first.", true);
+        return;
+      }
+      const blob = new Blob([articleInput.value], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "formatted-article.txt";
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("Downloaded formatted-article.txt");
+    });
+
+    document.getElementById("copyHtmlBtn").addEventListener("click", () => {
+      const { html } = parseArticleToHtml(articleInput.value);
+      navigator.clipboard.writeText(html).then(() => showToast("Clean HTML copied to clipboard."));
+    });
+
+    // Tab 2: Text to PDF
+    const pdfTitle = document.getElementById("pdfTitle");
+    const pdfFontSize = document.getElementById("pdfFontSize");
+    const pdfMargin = document.getElementById("pdfMargin");
+    const pdfIncludeHeader = document.getElementById("pdfIncludeHeader");
+    const pdfTextInput = document.getElementById("pdfTextInput");
+    const pdfPreviewTitle = document.getElementById("pdfPreviewTitle");
+    const pdfPreviewBody = document.getElementById("pdfPreviewBody");
+
+    function updatePdfPreview() {
+      pdfPreviewTitle.textContent = pdfTitle.value.trim() || "Untitled Document";
+      pdfPreviewTitle.classList.toggle("hidden", !pdfIncludeHeader.checked);
+      pdfPreviewBody.textContent = pdfTextInput.value || "Your PDF content preview appears here.";
+      pdfPreviewBody.style.fontSize = `${pdfFontSize.value}pt`;
+    }
+
+    [pdfTitle, pdfFontSize, pdfMargin, pdfIncludeHeader, pdfTextInput].forEach(el => {
+      el.addEventListener("input", updatePdfPreview);
+      el.addEventListener("change", updatePdfPreview);
+    });
+
+    document.getElementById("syncFromFormatterBtn").addEventListener("click", () => {
+      pdfTextInput.value = articleInput.value;
+      updatePdfPreview();
+      showToast("Imported text from Article Formatter.");
+    });
+
+    document.getElementById("downloadPdfBtn").addEventListener("click", () => {
+      const content = pdfTextInput.value.trim();
+      if (!content) {
+        showToast("Please enter text before generating a PDF.", true);
+        return;
+      }
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        showToast("PDF library failed to load. Check internet connection.", true);
+        return;
+      }
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: "mm", format: "a4" });
+      const margin = Number(pdfMargin.value) || 18;
+      const fontSize = Number(pdfFontSize.value) || 12;
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const usableWidth = pageWidth - margin * 2;
+      let y = margin;
+
+      if (pdfIncludeHeader.checked) {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(16);
+        const titleLines = doc.splitTextToSize(pdfTitle.value.trim() || "Document", usableWidth);
+        doc.text(titleLines, margin, y);
+        y += titleLines.length * 7 + 4;
+      }
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(fontSize);
+      const lineHeight = fontSize * 0.48;
+      const paragraphs = content.split(/\r?\n/);
+
+      paragraphs.forEach(para => {
+        const wrapped = doc.splitTextToSize(para || " ", usableWidth);
+        wrapped.forEach(line => {
+          if (y + lineHeight > pageHeight - margin) {
+            doc.addPage();
+            y = margin;
+          }
+          doc.text(line, margin, y);
+          y += lineHeight;
+        });
+        y += lineHeight * 0.35;
+      });
+
+      const safeName = (pdfTitle.value.trim() || "document").toLowerCase().replace(/[^a-z0-9]+/gi, "-");
+      doc.save(`${safeName}.pdf`);
+      showToast("PDF downloaded.");
+    });
+
+    // Tab 3: Text to Speech & Microphone Recorder
+    const ttsTextInput = document.getElementById("ttsTextInput");
+    const ttsVoiceSelect = document.getElementById("ttsVoiceSelect");
+    const ttsRate = document.getElementById("ttsRate");
+    const ttsPitch = document.getElementById("ttsPitch");
+    const ttsRateVal = document.getElementById("ttsRateVal");
+    const ttsPitchVal = document.getElementById("ttsPitchVal");
+
+    let voices = [];
+    function populateVoices() {
+      if (!("speechSynthesis" in window)) return;
+      voices = window.speechSynthesis.getVoices();
+      ttsVoiceSelect.innerHTML = "";
+      if (!voices.length) {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "Default System Voice";
+        ttsVoiceSelect.appendChild(opt);
+        return;
+      }
+      voices.forEach((v, idx) => {
+        const opt = document.createElement("option");
+        opt.value = idx;
+        opt.textContent = `${v.name} (${v.lang})`;
+        ttsVoiceSelect.appendChild(opt);
+      });
+    }
+    populateVoices();
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.onvoiceschanged = populateVoices;
+    }
+
+    ttsRate.addEventListener("input", () => { ttsRateVal.textContent = `${Number(ttsRate.value).toFixed(1)}x`; });
+    ttsPitch.addEventListener("input", () => { ttsPitchVal.textContent = Number(ttsPitch.value).toFixed(1); });
+
+    document.getElementById("syncTtsFromFormatterBtn").addEventListener("click", () => {
+      ttsTextInput.value = articleInput.value;
+      showToast("Imported text from Article Formatter.");
+    });
+
+    document.getElementById("ttsPlayBtn").addEventListener("click", () => {
+      if (!("speechSynthesis" in window)) {
+        showToast("SpeechSynthesis is not supported in this browser.", true);
+        return;
+      }
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+        return;
+      }
+      const text = ttsTextInput.value.trim();
+      if (!text) {
+        showToast("Please enter text to read aloud.", true);
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      const selectedVoice = voices[Number(ttsVoiceSelect.value)];
+      if (selectedVoice) utter.voice = selectedVoice;
+      utter.rate = Number(ttsRate.value);
+      utter.pitch = Number(ttsPitch.value);
+      window.speechSynthesis.speak(utter);
+    });
+
+    document.getElementById("ttsPauseBtn").addEventListener("click", () => {
+      if ("speechSynthesis" in window && window.speechSynthesis.speaking) {
+        window.speechSynthesis.pause();
+      }
+    });
+
+    document.getElementById("ttsStopBtn").addEventListener("click", () => {
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+    });
+
+    document.getElementById("copyTtsTextBtn").addEventListener("click", () => {
+      if (!ttsTextInput.value.trim()) {
+        showToast("Nothing to copy.", true);
+        return;
+      }
+      navigator.clipboard.writeText(ttsTextInput.value).then(() => showToast("Script copied to clipboard."));
+    });
+
+    document.getElementById("downloadScriptBtn").addEventListener("click", () => {
+      if (!ttsTextInput.value.trim()) {
+        showToast("Nothing to download.", true);
+        return;
+      }
+      const blob = new Blob([ttsTextInput.value], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "speech-script.txt";
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("Downloaded speech-script.txt");
+    });
+
+    // Mic Recorder
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let recInterval = null;
+    let recSeconds = 0;
+
+    const startRecBtn = document.getElementById("startRecBtn");
+    const stopRecBtn = document.getElementById("stopRecBtn");
+    const recDot = document.getElementById("recDot");
+    const recStatus = document.getElementById("recStatus");
+    const recTimer = document.getElementById("recTimer");
+    const recAudioPreview = document.getElementById("recAudioPreview");
+    const downloadRecLink = document.getElementById("downloadRecLink");
+
+    function formatTime(sec) {
+      const m = String(Math.floor(sec / 60)).padStart(2, "0");
+      const s = String(sec % 60).padStart(2, "0");
+      return `${m}:${s}`;
+    }
+
+    startRecBtn.addEventListener("click", async () => {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showToast("Microphone recording is not supported in this browser.", true);
+        return;
+      }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunks = [];
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = e => {
+          if (e.data && e.data.size > 0) audioChunks.push(e.data);
+        };
+        mediaRecorder.onstop = () => {
+          stream.getTracks().forEach(t => t.stop());
+          const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || "audio/webm" });
+          const ext = blob.type.includes("ogg") ? "ogg" : blob.type.includes("mp4") ? "m4a" : "webm";
+          const url = URL.createObjectURL(blob);
+          recAudioPreview.src = url;
+          recAudioPreview.classList.remove("hidden");
+          downloadRecLink.href = url;
+          downloadRecLink.download = `voice-recording.${ext}`;
+          downloadRecLink.classList.remove("hidden");
+          recDot.className = "w-3 h-3 rounded-full bg-emerald-500";
+          recStatus.textContent = "Recording ready";
+        };
+        mediaRecorder.start();
+        recSeconds = 0;
+        recTimer.textContent = "00:00";
+        clearInterval(recInterval);
+        recInterval = setInterval(() => {
+          recSeconds++;
+          recTimer.textContent = formatTime(recSeconds);
+        }, 1000);
+        startRecBtn.disabled = true;
+        stopRecBtn.disabled = false;
+        recDot.className = "w-3 h-3 rounded-full bg-rose-500 animate-pulse";
+        recStatus.textContent = "Recording...";
+      } catch (err) {
+        showToast("Microphone permission denied or unavailable.", true);
+      }
+    });
+
+    stopRecBtn.addEventListener("click", () => {
+      if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        mediaRecorder.stop();
+      }
+      clearInterval(recInterval);
+      startRecBtn.disabled = false;
+      stopRecBtn.disabled = true;
+    });
+
+    // Tab 4: Image Resizer & HD Enhancer
+    const presetsByCategory = {
+      youtube: [
+        { name: "YT Thumbnail (1280×720)", w: 1280, h: 720 },
+        { name: "YT Banner (2560×1440)", w: 2560, h: 1440 },
+        { name: "YT Shorts (1080×1920)", w: 1080, h: 1920 },
+        { name: "YT Avatar (800×800)", w: 800, h: 800 }
+      ],
+      facebook: [
+        { name: "FB Post (1200×630)", w: 1200, h: 630 },
+        { name: "FB Square (1080×1080)", w: 1080, h: 1080 },
+        { name: "FB Cover (820×312)", w: 820, h: 312 },
+        { name: "FB Story (1080×1920)", w: 1080, h: 1920 }
+      ],
+      instagram: [
+        { name: "IG Square (1080×1080)", w: 1080, h: 1080 },
+        { name: "IG Portrait (1080×1350)", w: 1080, h: 1350 },
+        { name: "IG Story/Reel (1080×1920)", w: 1080, h: 1920 },
+        { name: "IG Landscape (1080×566)", w: 1080, h: 566 }
+      ],
+      tiktok: [
+        { name: "TikTok Video (1080×1920)", w: 1080, h: 1920 },
+        { name: "TikTok Square (1080×1080)", w: 1080, h: 1080 },
+        { name: "TikTok Avatar (200×200)", w: 200, h: 200 }
+      ],
+      brand: [
+        { name: "Logo Square (500×500)", w: 500, h: 500 },
+        { name: "Logo Wide (1200×400)", w: 1200, h: 400 },
+        { name: "Favicon (512×512)", w: 512, h: 512 },
+        { name: "OG Share (1200×628)", w: 1200, h: 628 }
+      ]
+    };
+
+    let activeCategory = "youtube";
+    const presetButtonsGrid = document.getElementById("presetButtonsGrid");
+    const imgWidthInput = document.getElementById("imgWidth");
+    const imgHeightInput = document.getElementById("imgHeight");
+    const imgFitMode = document.getElementById("imgFitMode");
+    const lockAspectRatio = document.getElementById("lockAspectRatio");
+    const imgScaleMult = document.getElementById("imgScaleMult");
+    const imgSharpen = document.getElementById("imgSharpen");
+    const imgContrast = document.getElementById("imgContrast");
+    const imgBrightness = document.getElementById("imgBrightness");
+    const imgSaturate = document.getElementById("imgSaturate");
+    const compareSlider = document.getElementById("compareSlider");
+    const beforeOverlayWrap = document.getElementById("beforeOverlayWrap");
+    const afterCanvas = document.getElementById("afterCanvas");
+    const beforeCanvas = document.getElementById("beforeCanvas");
+    const beforeDisplayCanvas = document.getElementById("beforeDisplayCanvas");
+    const canvasStage = document.getElementById("canvasStage");
+    const emptyCanvasPlaceholder = document.getElementById("emptyCanvasPlaceholder");
+    const imgDimensionsBadge = document.getElementById("imgDimensionsBadge");
+
+    let uploadedImg = null;
+    let lastRatio = 1280 / 720;
+
+    function renderPresetButtons() {
+      presetButtonsGrid.innerHTML = "";
+      (presetsByCategory[activeCategory] || []).forEach(p => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.textContent = p.name;
+        btn.className = "text-left px-2.5 py-1.5 rounded bg-slate-800 hover:bg-indigo-600 text-xs text-slate-200 hover:text-white truncate transition";
+        btn.addEventListener("click", () => {
+          imgWidthInput.value = p.w;
+          imgHeightInput.value = p.h;
+          lastRatio = p.w / p.h;
+          renderImagePipeline();
+        });
+        presetButtonsGrid.appendChild(btn);
+      });
+    }
+
+    document.querySelectorAll(".preset-cat").forEach(btn => {
+      btn.addEventListener("click", () => {
+        activeCategory = btn.dataset.cat;
+        document.querySelectorAll(".preset-cat").forEach(b => {
+          b.className = "preset-cat px-2.5 py-1 rounded bg-slate-800 text-slate-300 text-xs font-semibold";
+        });
+        btn.className = "preset-cat px-2.5 py-1 rounded bg-indigo-600 text-white text-xs font-semibold";
+        renderPresetButtons();
+      });
+    });
+
+    imgWidthInput.addEventListener("input", () => {
+      const w = Math.max(16, Number(imgWidthInput.value) || 1280);
+      if (lockAspectRatio.checked && lastRatio > 0) {
+        imgHeightInput.value = Math.max(16, Math.round(w / lastRatio));
+      } else {
+        lastRatio = w / Math.max(16, Number(imgHeightInput.value) || 720);
+      }
+      renderImagePipeline();
+    });
+
+    imgHeightInput.addEventListener("input", () => {
+      const h = Math.max(16, Number(imgHeightInput.value) || 720);
+      if (lockAspectRatio.checked && lastRatio > 0) {
+        imgWidthInput.value = Math.max(16, Math.round(h * lastRatio));
+      } else {
+        lastRatio = Math.max(16, Number(imgWidthInput.value) || 1280) / h;
+      }
+      renderImagePipeline();
+    });
+
+    function drawFitted(ctx, img, w, h, mode) {
+      ctx.clearRect(0, 0, w, h);
+      const iw = img.naturalWidth || img.width;
+      const ih = img.naturalHeight || img.height;
+      if (!iw || !ih) return;
+
+      if (mode === "stretch") {
+        ctx.drawImage(img, 0, 0, w, h);
+      } else if (mode === "contain") {
+        const scale = Math.min(w / iw, h / ih);
+        const dw = iw * scale;
+        const dh = ih * scale;
+        ctx.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh);
+      } else {
+        const scale = Math.max(w / iw, h / ih);
+        const dw = iw * scale;
+        const dh = ih * scale;
+        ctx.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh);
+      }
+    }
+
+    function applySharpen(ctx, w, h, amount) {
+      if (amount <= 0) return;
+      const strength = (amount / 100) * 1.4;
+      const imgData = ctx.getImageData(0, 0, w, h);
+      const src = imgData.data;
+      const out = new Uint8ClampedArray(src);
+      const k = strength;
+      const center = 1 + 4 * k;
+
+      for (let y = 1; y < h - 1; y++) {
+        for (let x = 1; x < w - 1; x++) {
+          const idx = (y * w + x) * 4;
+          for (let c = 0; c < 3; c++) {
+            const val =
+              center * src[idx + c] -
+              k * (
+                src[((y - 1) * w + x) * 4 + c] +
+                src[((y + 1) * w + x) * 4 + c] +
+                src[(y * w + (x - 1)) * 4 + c] +
+                src[(y * w + (x + 1)) * 4 + c]
+              );
+            out[idx + c] = val;
+          }
+        }
+      }
+      ctx.putImageData(new ImageData(out, w, h), 0, 0);
+    }
+
+    function renderImagePipeline() {
+      const baseW = Math.min(4096, Math.max(16, Number(imgWidthInput.value) || 1280));
+      const baseH = Math.min(4096, Math.max(16, Number(imgHeightInput.value) || 720));
+      const mult = Number(imgScaleMult.value) || 1;
+      const outW = Math.min(4096, Math.round(baseW * mult));
+      const outH = Math.min(4096, Math.round(baseH * mult));
+
+      document.getElementById("sharpenVal").textContent = `${imgSharpen.value}%`;
+      document.getElementById("contrastVal").textContent = `${imgContrast.value}%`;
+      document.getElementById("brightnessVal").textContent = `${imgBrightness.value}%`;
+      document.getElementById("saturateVal").textContent = `${imgSaturate.value}%`;
+      document.getElementById("compareVal").textContent = `${compareSlider.value}%`;
+      imgDimensionsBadge.textContent = `${outW} × ${outH} px`;
+
+      if (!uploadedImg) return;
+
+      beforeCanvas.width = outW;
+      beforeCanvas.height = outH;
+      const bCtx = beforeCanvas.getContext("2d");
+      drawFitted(bCtx, uploadedImg, outW, outH, imgFitMode.value);
+
+      afterCanvas.width = outW;
+      afterCanvas.height = outH;
+      const aCtx = afterCanvas.getContext("2d");
+      aCtx.save();
+      aCtx.filter = `contrast(${imgContrast.value}%) brightness(${imgBrightness.value}%) saturate(${imgSaturate.value}%)`;
+      drawFitted(aCtx, uploadedImg, outW, outH, imgFitMode.value);
+      aCtx.restore();
+
+      const sharpAmt = Number(imgSharpen.value) || 0;
+      if (sharpAmt > 0 && outW * outH <= 4096 * 2160) {
+        applySharpen(aCtx, outW, outH, sharpAmt);
+      }
+
+      emptyCanvasPlaceholder.classList.add("hidden");
+      canvasStage.classList.remove("hidden");
+
+      const rect = afterCanvas.getBoundingClientRect();
+      beforeDisplayCanvas.width = outW;
+      beforeDisplayCanvas.height = outH;
+      if (rect.width > 0 && rect.height > 0) {
+        beforeDisplayCanvas.style.width = `${rect.width}px`;
+        beforeDisplayCanvas.style.height = `${rect.height}px`;
+      }
+      beforeDisplayCanvas.getContext("2d").drawImage(beforeCanvas, 0, 0);
+      beforeOverlayWrap.style.width = `${compareSlider.value}%`;
+    }
+
+    document.getElementById("imageFileInput").addEventListener("change", e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const img = new Image();
+        img.onload = () => {
+          uploadedImg = img;
+          lastRatio = (img.naturalWidth || 16) / (img.naturalHeight || 9);
+          renderImagePipeline();
+          showToast("Image loaded.");
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById("quickHdBtn").addEventListener("click", () => {
+      imgSharpen.value = 45;
+      imgContrast.value = 114;
+      imgBrightness.value = 104;
+      imgSaturate.value = 116;
+      renderImagePipeline();
+      showToast("Quick HD Boost applied.");
+    });
+
+    [imgFitMode, imgScaleMult, imgSharpen, imgContrast, imgBrightness, imgSaturate].forEach(el => {
+      el.addEventListener("input", renderImagePipeline);
+      el.addEventListener("change", renderImagePipeline);
+    });
+
+    compareSlider.addEventListener("input", () => {
+      document.getElementById("compareVal").textContent = `${compareSlider.value}%`;
+      beforeOverlayWrap.style.width = `${compareSlider.value}%`;
+    });
+
+    window.addEventListener("resize", () => {
+      if (uploadedImg) renderImagePipeline();
+    });
+
+    document.getElementById("downloadImgBtn").addEventListener("click", () => {
+      if (!uploadedImg) {
+        showToast("Please upload an image first.", true);
+        return;
+      }
+      renderImagePipeline();
+      const mime = document.getElementById("imgFormat").value;
+      const ext = mime === "image/jpeg" ? "jpg" : mime === "image/webp" ? "webp" : "png";
+      const dataUrl = afterCanvas.toDataURL(mime, 0.92);
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = `creatorkit-${afterCanvas.width}x${afterCanvas.height}.${ext}`;
+      a.click();
+      showToast(`Downloaded image as .${ext.toUpperCase()}`);
+    });
+
+    // Init
+    renderPresetButtons();
+    updateArticleStatsAndPreview();
+    updatePdfPreview();
+  </script>
+</body>
+</html>
